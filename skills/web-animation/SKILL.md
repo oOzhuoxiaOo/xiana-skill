@@ -1,18 +1,20 @@
 ---
 name: web-animation
-description: Add anime-style visual elements to websites — anime background images, anime avatars, and larger rounded corners. Use when the user asks to add anime style, ACG elements, 二次元风格, or anime-themed visuals to a web page or component.
+description: Add anime-style visual elements to static HTML pages — anime backgrounds, avatars, rounded corners, animations, and Mermaid diagrams. HTML + CSS + JS + CDN only. Use when the user asks for anime style, ACG elements, 二次元风格, or anime-themed visuals on an HTML page.
 ---
 
 # Web Anime Style
 
-为网站添加动漫风格的视觉元素，让页面更具二次元氛围。
+为**静态 HTML 页面**添加动漫风格的视觉元素，让页面更具二次元氛围。
+
+> **适用范围**：本 skill 仅使用 HTML + CSS + JS + CDN，不涉及 React、Vue、Next.js 等框架。
 
 ## 0. 前置检查（重要，先做这一步）
 
 在写任何代码之前：
 
 1. **直接使用下方"图片资源"表中给出的在线 URL**，无需本地文件、无需 `ls` 检查、无需关心项目静态资源目录结构。所有图片均为外部 CDN 链接（`http://101.96.214.171:40027/...`），可直接写入 `src` / `background-image`。
-2. **确认现有项目配色**：检查项目是否已有品牌色 / Tailwind 主题色配置（`tailwind.config.js` 的 `theme.colors`）。若已有强品牌色，动漫配色（粉/紫/天蓝）应作为**点缀色**叠加，不要整体替换主色，避免视觉冲突。
+2. **确认现有项目配色**：检查页面是否已有品牌色或 CSS 变量。若已有强品牌色，动漫配色（粉/紫/天蓝）应作为**点缀色**叠加，不要整体替换主色，避免视觉冲突。
 3. **图床为 HTTP（非 HTTPS）**：若项目部署在 HTTPS 站点下，浏览器可能因 Mixed Content 策略拦截这些图片。若遇到图片不显示，检查浏览器控制台是否有 Mixed Content 警告，并考虑：a) 将图片下载到本地项目自行托管；b) 或通过反向代理转为 HTTPS。
 
 ## 图片资源（在线 CDN）
@@ -69,20 +71,20 @@ description: Add anime-style visual elements to websites — anime background im
 - 优先使用横版图片（横图 01-07）作为 Hero 区背景
 - 也可以用竖版图片（竖图 01-11），配合 `object-cover` 裁剪
 - 直接使用"图片资源"表中的完整 URL
-- 可使用 Next.js 的 `Image` 组件或 CSS `background-image`
-- 背景上加一层半透明黑色遮罩（`bg-black/40` 或 `bg-black/50`）保证文字可读性
+- 使用 `<img>` 或 CSS `background-image` 均可
+- 背景上加一层半透明黑色遮罩保证文字可读性
 
-```tsx
-// 示例：Hero 背景
-<section className="relative h-screen overflow-hidden">
+```html
+<!-- 示例：Hero 背景 -->
+<section class="hero" style="position:relative;min-height:100vh;overflow:hidden;">
   <img
     src="http://101.96.214.171:40027/i/2026/06/14/6a2e74194f0f7.webp"
     alt=""
-    className="absolute inset-0 w-full h-full object-cover"
+    style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;"
   />
-  <div className="absolute inset-0 bg-black/40" />
-  <div className="relative z-10 flex flex-col items-center justify-center h-full text-white">
-    {/* Hero 内容 */}
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,0.4);"></div>
+  <div style="position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;color:#fff;">
+    <!-- Hero 内容 -->
   </div>
 </section>
 ```
@@ -91,17 +93,17 @@ description: Add anime-style visual elements to websites — anime background im
 
 将默认圆角替换为更大的值，营造柔和、卡通的动漫感：
 
-- 卡片：`rounded-2xl`（16px）或 `rounded-3xl`（24px）
-- 按钮：`rounded-xl`（12px）或 `rounded-2xl`（16px）
-- 头像：`rounded-full`（圆形）或 `rounded-2xl`（方形大圆角）
-- 输入框：`rounded-xl`
-- 图片容器：`rounded-2xl` 或 `rounded-3xl`
+- 卡片：`border-radius: 16px` ~ `24px`
+- 按钮：`border-radius: 12px` ~ `16px`
+- 头像：`border-radius: 50%`（圆形）或 `16px`（方形大圆角）
+- 输入框：`border-radius: 12px`
+- 图片容器：`border-radius: 16px` ~ `24px`
 
-```tsx
-// 示例：动漫风格卡片
-<div className="rounded-3xl bg-white shadow-lg overflow-hidden">
-  <img src="..." className="w-full h-48 object-cover" />
-  <div className="p-6">{/* 内容 */}</div>
+```html
+<!-- 示例：动漫风格卡片 -->
+<div class="anime-card" style="border-radius:24px;background:#fff;box-shadow:0 10px 30px rgba(0,0,0,0.1);overflow:hidden;">
+  <img src="..." alt="" style="width:100%;height:12rem;object-fit:cover;" />
+  <div style="padding:1.5rem;"><!-- 内容 --></div>
 </div>
 ```
 
@@ -115,14 +117,14 @@ description: Add anime-style visual elements to websites — anime background im
 
 - 用户头像、评论区头像、作者头像统一使用"图片资源"表中的头像 URL
 - 默认选主头像 01 作为主头像，其余 7 张随机分配给不同用户
-- 使用 `rounded-full` 圆形裁剪，或 `rounded-2xl` 方形大圆角
+- 使用 `border-radius: 50%` 圆形裁剪，或 `border-radius: 16px` 方形大圆角
 
-```tsx
-// 示例：动漫头像
+```html
+<!-- 示例：动漫头像 -->
 <img
   src="http://101.96.214.171:40027/i/2026/06/14/6a2e7136667d7.webp"
   alt="用户头像"
-  className="w-12 h-12 rounded-full object-cover"
+  style="width:3rem;height:3rem;border-radius:50%;object-fit:cover;"
 />
 ```
 
@@ -139,35 +141,22 @@ description: Add anime-style visual elements to websites — anime background im
 
 > **注意**：CDN 引入时建议锁定版本号（如 `lucide@0.460.0`），避免 `@latest` 在升级后产生破坏性变更。
 
-**纯 HTML（零依赖 CDN 方式，AI 编码最友好）：**
+**CDN 引入：**
 
 ```html
 <!-- 1. 引入 CDN（建议锁定版本） -->
 <script src="https://unpkg.com/lucide@0.460.0"></script>
 
 <!-- 2. 任何 HTML 元素加 data-lucide 属性即可 -->
-<i data-lucide="heart" class="w-6 h-6 text-pink-400"></i>
-<i data-lucide="star" class="w-5 h-5 fill-amber-400"></i>
-<i data-lucide="search" class="w-5 h-5 text-gray-300"></i>
+<i data-lucide="heart" style="width:1.5rem;height:1.5rem;color:#f472b6;"></i>
+<i data-lucide="star" style="width:1.25rem;height:1.25rem;color:#fbbf24;"></i>
+<i data-lucide="search" style="width:1.25rem;height:1.25rem;color:#d1d5db;"></i>
 
 <!-- 3. 页面底部初始化一次 -->
 <script>lucide.createIcons();</script>
 ```
 
-**React：**
-
-```tsx
-import { Heart, Star, Search, Sparkles } from 'lucide-react';
-<Heart className="w-6 h-6 text-pink-400" />
-<Star className="w-5 h-5 fill-amber-400 text-amber-400" />
-```
-
-**Vue 3：**
-
-```vue
-import { Heart, Star } from 'lucide-vue-next';
-<Heart class="w-6 h-6 text-pink-400" />
-```
+> 若页面已引入 Tailwind CDN，也可继续用 utility class（如 `w-6 h-6 text-pink-400`）替代 inline style。
 
 **常用图标映射（动漫风格常用）：**
 
@@ -844,44 +833,6 @@ sequenceDiagram
   A-->>U: 成功提示
   </pre>
 </div>
-```
-
-**React（`@mermaid-js/mermaid` 或动态 import）：**
-
-```tsx
-'use client';
-import { useEffect, useRef } from 'react';
-
-const MERMAID_CONFIG = {
-  startOnLoad: false,
-  theme: 'dark',
-  flowchart: { useMaxWidth: true, nodeSpacing: 40, rankSpacing: 48 },
-  themeVariables: { fontSize: '15px' },
-};
-
-export function MermaidBlock({ chart }: { chart: string }) {
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const mermaid = (await import('mermaid')).default;
-      mermaid.initialize(MERMAID_CONFIG);
-      if (!ref.current || cancelled) return;
-      const { svg } = await mermaid.render(`mmd-${Date.now()}`, chart);
-      ref.current.innerHTML = svg;
-    })();
-    return () => { cancelled = true; };
-  }, [chart]);
-
-  return (
-    <section className="mermaid-section w-full my-8">
-      <div className="mermaid-wrap px-6 py-5 rounded-2xl overflow-x-auto">
-        <div ref={ref} className="[&>svg]:mx-auto [&>svg]:max-w-full [&>svg]:h-auto" />
-      </div>
-    </section>
-  );
-}
 ```
 
 **常用图类型速查：**
