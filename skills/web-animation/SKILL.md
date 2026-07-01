@@ -740,3 +740,162 @@ if (emblaNode) {
 ```
 
 > **原理**：AOS 滚动到元素位置时添加 `.aos-animate` 类，CSS transition 接管实际的视觉属性变化。`blur-in` 只定义起始/结束状态和过渡曲线，不写 `@keyframes`。`data-aos-delay` 配合不同 delay 实现级联入场，逐个从模糊变清晰。`once: true` 确保动画只触发一次，避免闪烁。
+
+### 17. Mermaid 图表 / 流程图
+
+用 [Mermaid](https://mermaid.js.org/) 在页面内渲染流程图、时序图、状态图等。**主题用内置 `dark` 即可**，不要额外叠浅色背景或自定义亮色主题，与动漫暗色页面更协调。
+
+> **展示空间（重要）**：Mermaid 在窄容器里会被压得很小，但也不要为了「够大」而无限放大。目标是**文字清晰可读、布局不拥挤**——给图表独立全宽区块即可，尺寸随内容自适应，简单图不必强行撑高。
+
+**CDN 快速集成（建议锁定版本）：**
+
+```html
+<!-- 1. 引入 -->
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',           // 默认暗色，无需再改 background
+    securityLevel: 'loose',
+    flowchart: {
+      useMaxWidth: true,     // 默认 true：随容器等比缩放，简单图不会撑爆
+      htmlLabels: true,
+      padding: 16,
+      nodeSpacing: 40,
+      rankSpacing: 48,
+    },
+    themeVariables: {
+      fontSize: '15px',
+    },
+  });
+</script>
+
+<!-- 2. 图表容器：留足宽高 -->
+<section class="mermaid-section">
+  <div class="mermaid-wrap">
+    <pre class="mermaid">
+flowchart LR
+  A[用户访问] --> B{已登录?}
+  B -->|是| C[进入首页]
+  B -->|否| D[跳转登录]
+  C --> E[浏览内容]
+  D --> E
+    </pre>
+  </div>
+</section>
+```
+
+**CSS（可读即可，勿强行撑大）：**
+
+```css
+/* 独立区块，不要嵌在窄列 grid 里 */
+.mermaid-section {
+  width: 100%;
+  margin: 2rem 0;
+}
+
+.mermaid-wrap {
+  width: 100%;
+  padding: 1.25rem 1.5rem;
+  border-radius: 1rem;
+  overflow-x: auto;           /* 极宽图可横向滚动 */
+}
+
+/* 随容器缩放，上限不超过内容区宽度 */
+.mermaid-wrap svg {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  height: auto;
+}
+```
+
+**何时需要更大：**
+
+| 情况 | 做法 |
+|------|------|
+| 简单流程（≤6 节点） | 保持默认 `useMaxWidth: true`，不设 `min-height` |
+| 复杂架构图（多 subgraph） | 容器设 `min-height: 280px`，或单图 init 里设 `useMaxWidth: false` |
+| 被压得太小 | 先检查是否嵌在 `max-w-sm` / 双列 grid；改全宽通常比关 `useMaxWidth` 更有效 |
+| 被放得太大 | 去掉 `max-width: none`、`min-width: 640px` 等 CSS；间距回调到默认 |
+
+**布局建议：**
+
+| 场景 | 做法 |
+|------|------|
+| 落地页 / 文档页主内容 | 单独一行全宽（`w-full`），不要和侧边栏并排 |
+| 卡片内嵌小图 | 仅适合 3 节点以内的极简图；否则拆到弹层或独立 section |
+| 移动端 | 保留 `overflow-x: auto` |
+| 多图并列 | 用纵向堆叠，不要用 `grid-cols-2` 把两个流程图挤在一行 |
+
+**单图覆盖配置（可选，写在 diagram 开头）：**
+
+```html
+<div class="mermaid-wrap">
+  <pre class="mermaid">
+%%{init: {'theme': 'dark', 'flowchart': {'useMaxWidth': true}}}%%
+sequenceDiagram
+  participant U as 用户
+  participant A as 前端
+  participant S as 服务端
+  U->>A: 点击提交
+  A->>S: POST /api/form
+  S-->>A: 200 OK
+  A-->>U: 成功提示
+  </pre>
+</div>
+```
+
+**React（`@mermaid-js/mermaid` 或动态 import）：**
+
+```tsx
+'use client';
+import { useEffect, useRef } from 'react';
+
+const MERMAID_CONFIG = {
+  startOnLoad: false,
+  theme: 'dark',
+  flowchart: { useMaxWidth: true, nodeSpacing: 40, rankSpacing: 48 },
+  themeVariables: { fontSize: '15px' },
+};
+
+export function MermaidBlock({ chart }: { chart: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const mermaid = (await import('mermaid')).default;
+      mermaid.initialize(MERMAID_CONFIG);
+      if (!ref.current || cancelled) return;
+      const { svg } = await mermaid.render(`mmd-${Date.now()}`, chart);
+      ref.current.innerHTML = svg;
+    })();
+    return () => { cancelled = true; };
+  }, [chart]);
+
+  return (
+    <section className="mermaid-section w-full my-8">
+      <div className="mermaid-wrap px-6 py-5 rounded-2xl overflow-x-auto">
+        <div ref={ref} className="[&>svg]:mx-auto [&>svg]:max-w-full [&>svg]:h-auto" />
+      </div>
+    </section>
+  );
+}
+```
+
+**常用图类型速查：**
+
+| 语法关键字 | 用途 |
+|-----------|------|
+| `flowchart TD` / `LR` | 业务流程、架构流向 |
+| `sequenceDiagram` | 接口调用、交互时序 |
+| `stateDiagram-v2` | 状态机、订单/任务状态 |
+| `classDiagram` | 模块关系（技术文档） |
+| `gantt` | 排期、里程碑 |
+
+> **关键点**：
+> - **主题**：只用 `theme: 'dark'`，不额外铺白底或 `bg-white`
+> - **尺寸**：默认 `useMaxWidth: true` + `max-width: 100%`，简单图随容器缩放；复杂宽图才考虑关 `useMaxWidth` 或设 `min-height`
+> - **节点数量**：单图超过 8–10 个节点时考虑拆成多图或子图（`subgraph`），避免一屏塞满
+> - **与 AOS 配合**：图表容器可加 `data-aos="fade-up"`，但不要用 `blur-in`（模糊滤镜可能影响 SVG 清晰度）
